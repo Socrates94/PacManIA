@@ -26,15 +26,15 @@ ZNEAR=0.01
 ZFAR=900.0
 #Variables para definir la posicion del observador
 #gluLookAt(EYE_X,EYE_Y,EYE_Z,CENTER_X,CENTER_Y,CENTER_Z,UP_X,UP_Y,UP_Z)
-EYE_X = 300.0 + 200.0
-EYE_Y = 200.0
-EYE_Z = 300.0 + 200.0
-CENTER_X = 0 + 200
-CENTER_Y = 0
-CENTER_Z = 0 + 200
-UP_X=0
-UP_Y=1
-UP_Z=0
+EYE_X = 200.0
+EYE_Y = 400.0
+EYE_Z = 200.0
+CENTER_X = 200.0
+CENTER_Y = 0.0
+CENTER_Z = 200.0
+UP_X=0.0
+UP_Y=0.0
+UP_Z=-1.0
 #Variables para dibujar los ejes del sistema
 X_MIN=-500
 X_MAX=500
@@ -175,7 +175,9 @@ def Init():
 
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
-    gluPerspective(FOVY, screen_width/screen_height, ZNEAR, ZFAR)
+    # Utilizamos proyeccion ortogonal en vez de perspectiva para la vista en 2D
+    # screen_width=900, screen_height=800 -> ratio=1.125
+    glOrtho(-230.625, 230.625, -205.0, 205.0, ZNEAR, ZFAR)
 
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
@@ -252,17 +254,9 @@ while not done:
     
     keys = pygame.key.get_pressed()
     if keys[pygame.K_RIGHT]:
-        if theta > 359.0:
-            theta = 0
-        else:
-            theta += 1.0
-        lookat()
+        pass # Deshabilitado para mantener la vista 2D estricta
     if keys[pygame.K_LEFT]:
-        if theta < 1.0:
-            theta = 360.0
-        else:
-            theta += -1.0
-        lookat()
+        pass # Deshabilitado para mantener la vista 2D estricta
     #Se verifica la direccion para el pacman    
     if keys[pygame.K_w]:
         #direccion 0
