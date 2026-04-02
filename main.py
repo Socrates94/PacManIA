@@ -123,10 +123,14 @@ grid = []
 pc = Pacman(matrix, MC, XPxToMC, YPxToMC)
 #fantasmas
 ghosts = []
-ghosts.append(Ghost(matrix, MC, XPxToMC, YPxToMC, 378, 380, 2, 2))
+# ghosts[0]: Blinky (Rojo) -> Textura 2. Tipo 0 (Movimiento Aleatorio)
 ghosts.append(Ghost(matrix, MC, XPxToMC, YPxToMC, 378, 20, 0, 0))
-ghosts.append(Ghost(matrix, MC, XPxToMC, YPxToMC, 20, 380, 3, 0))
-ghosts.append(Ghost(matrix, MC, XPxToMC, YPxToMC, 20, 380, 3, 0))
+# ghosts[1]: Pinky (Rosa) -> Textura 3. Tipo 2 (Poda Alfa-Beta)
+ghosts.append(Ghost(matrix, MC, XPxToMC, YPxToMC, 378, 380, 2, 2))
+# ghosts[2]: Inky (Cian) -> Textura 4. Tipo 3 (Poda Alfa-Beta Manada)
+ghosts.append(Ghost(matrix, MC, XPxToMC, YPxToMC, 20, 380, 3, 3))
+# ghosts[3]: Clyde (Naranja) -> Textura 5. Tipo 3 (Poda Alfa-Beta Manada)
+ghosts.append(Ghost(matrix, MC, XPxToMC, YPxToMC, 20, 20, 1, 3))
 
 
 pygame.init()

@@ -1,0 +1,50 @@
+IA
+2º Parcial
+
+Nombre: _____________________________________ Matricula: ________________
+Calificación: _______________
+Instrucciones: Analiza cada una de las preguntas que se exponen a continuación. Realiza las
+implementaciones correspondientes, las cuales se deberán de entregar en la fecha indicada.
+
+Implementar un juego del Pacman en el cual, la toma de decisión de los fantasmas este
+basado en el algoritmo Poda Alfa-Beta, tomando como base el código proporcionado
+por el profesor. Para ello, considerar lo siguiente:
+1. (1.0 pts) Implementar un fantasma (Blinky - rojo) para alcanzar la posición del
+Pacman basado en un movimiento aleatorio. Este fantasma se debe mover por el
+laberinto respetando las reglas generales de movimiento (solo puede cambiar de
+dirección en las intersecciones, no puede regresarse por el camino por el cual
+llegó a la intersección).
+2. (2 pts) Definir una función de evaluación para el algoritmo poda alfa-beta, en la
+cual permita determinar el movimiento que debe tomar un fantasma (Pinky rosa) para alcanzar la posición del Pacman. Incluir en el diseño de la función por
+lo menos dos componentes heurísticos. Implementar el código correspondiente
+para mover el fantasma sobre el laberinto, respetando las reglas generales de
+movimiento (solo puede cambiar de dirección en las intersecciones, no puede
+regresarse por el camino por el cual llegó a la intersección). Se debe argumentar
+el diseño de dicha función.
+3. (3 pts) Definir una función de evaluación para el algoritmo poda alfa-beta, en la
+cual permita determinar el movimiento que debe tomar dos fantasmas
+(Inky/Clyde – cian/naranja) para alcanzar la posición del Pacman, con un
+movimiento colaborativo (cazar en manada). Incluir en el diseño de la función
+por lo menos dos componentes heurísticos. Implementar el código
+correspondiente para mover los fantasmas sobre el laberinto, respetando las
+reglas generales de movimiento (solo puede cambiar de dirección en las
+intersecciones, no puede regresarse por el camino por el cual llegó a la
+intersección). Se debe argumentar el diseño de dicha función.
+4. (2 pts) Implementar el algoritmo poda alfa-beta, de tal forma que sea aplicable a
+las preguntas previas, incluyendo dos estrategias de mejora platicadas en clase
+(continuación heurística, búsqueda ambiciosa, etc.), incluyendo por default Tabú
+con horizonte limitado. Presentar el pseudocódigo correspondiente, así como la
+correspondiente implementación.
+5. (2 pts) Presentar un video y compartir el link correspondiente, de una longitud
+no mayor a 5 minutos, en la cual se explique el proyecto y se presenten pruebas
+de ejecución (NOTA: verificar que el link es accesible, ya que, de no tener
+acceso, se asignará 0 puntos para esta pregunta).
+FECHA DE ENTREGA: LA SEÑALADA EN CLASE
+12 de abril, 11:59 pm
+Entregables:
+1. Documento PDF con respuesta a cada una de las preguntas planteadas
+
+2. Archivo comprimido (.zip, .rar) con los códigos correspondientes (basado en el
+proyecto compartido por el profesor.)
+
+
