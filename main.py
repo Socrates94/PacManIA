@@ -121,16 +121,56 @@ grid = []
 
 #pacman object
 pc = Pacman(matrix, MC, XPxToMC, YPxToMC)
-#fantasmas
-ghosts = []
-# ghosts[0]: Blinky (Rojo) -> Textura 2. Tipo 0 (Movimiento Aleatorio)
-ghosts.append(Ghost(matrix, MC, XPxToMC, YPxToMC, 378, 20, 0, 0))
-# ghosts[1]: Pinky (Rosa) -> Textura 3. Tipo 2 (Poda Alfa-Beta)
-ghosts.append(Ghost(matrix, MC, XPxToMC, YPxToMC, 378, 380, 2, 2))
-# ghosts[2]: Inky (Cian) -> Textura 4. Tipo 3 (Poda Alfa-Beta Manada)
-ghosts.append(Ghost(matrix, MC, XPxToMC, YPxToMC, 20, 380, 3, 3))
-# ghosts[3]: Clyde (Naranja) -> Textura 5. Tipo 3 (Poda Alfa-Beta Manada)
-ghosts.append(Ghost(matrix, MC, XPxToMC, YPxToMC, 20, 20, 1, 3))
+# Inicialización de objetos de fantasmas (individuales para pruebas dinámicas)
+blinky = Ghost(matrix, MC, XPxToMC, YPxToMC, 378, 20, 0, 0)
+pinky = Ghost(matrix, MC, XPxToMC, YPxToMC, 378, 380, 2, 2)
+inky = Ghost(matrix, MC, XPxToMC, YPxToMC, 20, 380, 3, 3)
+clyde = Ghost(matrix, MC, XPxToMC, YPxToMC, 219, 150, 1, 3)
+
+def configurar_fantasmas(opcion):
+    ghosts_activos = []
+    if opcion == 1:
+        ghosts_activos.append(blinky)
+    elif opcion == 2:
+        ghosts_activos.append(pinky)
+    elif opcion == 3:
+        ghosts_activos.extend([inky, clyde])
+    elif opcion == 4:
+        ghosts_activos.extend([blinky, pinky, inky, clyde])
+    return ghosts_activos
+
+def mostrar_menu():
+    print("\n" + "="*75)
+    print("\t\t MENU DEL JUEGO")
+    print("     Juego de Pac-Man con el algoritmo Poda alfa beta")
+    print("="*75)
+    print("1. Fantasma (Blinky - rojo) movimientos aleatorios")
+    print("2. Fantasma (Pinky - rosa) con poda alfa beta con las dos heurísticas")
+    print("3. Fantasmas (Inky/Clyde - cian/naranja) cazar en manada")
+    print("4. Todos los fantasmitas a la vez (Blinky, Pinky, Inky, Clyde)")
+    print("5. Salir")
+    print("="*75 + "\n")
+    
+    while True:
+        try:
+            opcion = int(input("Selecciona una opción del menu (1-5): "))
+            if 1 <= opcion <= 5:
+                return opcion
+            else:
+                print("Por favor, ingresa un número entre 1 y 5.")
+        except ValueError:
+            print("Entrada no válida. Ingresa un número.")
+
+opcion_menu = mostrar_menu()
+if opcion_menu == 5:
+    sys.exit()
+
+# Lista de fantasmas activos
+ghosts = configurar_fantasmas(opcion_menu)
+
+
+collision_detected = False
+return_to_menu = False
 
 
 pygame.init()
@@ -185,10 +225,18 @@ def Init():
 
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
+    # Para la vista cenital 2D, la cámara se eleva sobre el eje Y mirando hacia abajo (plano XZ)
     gluLookAt(EYE_X,EYE_Y,EYE_Z,CENTER_X,CENTER_Y,CENTER_Z,UP_X,UP_Y,UP_Z)
     glClearColor(0,0,0,0)
     glEnable(GL_DEPTH_TEST)
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+
+    # Inicializar el mezclador de audio
+    pygame.mixer.init()
+    global sonido_chomp
+    sonido_chomp = pygame.mixer.Sound('pacman_chomp.wav')
+    sonido_chomp.play(-1) # Reproducir en bucle infinito
+
     #textures[0]: plano
     Texturas(file_1)
     #textures[1]: pacman
@@ -202,12 +250,12 @@ def Init():
     #textures[5]: fantasma4
     Texturas(img_ghost4)
 
-    #se pasan las texturas a los objetos
-    pc.loadTextures(textures,1)
-    ghosts[0].loadTextures(textures,2)
-    ghosts[1].loadTextures(textures,3)
-    ghosts[2].loadTextures(textures,4)
-    ghosts[3].loadTextures(textures,5)
+    # se pasan las texturas a los objetos de forma fija
+    pc.loadTextures(textures, 1)
+    blinky.loadTextures(textures, 2)
+    pinky.loadTextures(textures, 3)
+    inky.loadTextures(textures, 4)
+    clyde.loadTextures(textures, 5)
     
 def PlanoTexturizado():
     #Activate textures
@@ -242,7 +290,8 @@ def display():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     Axis()
     PlanoTexturizado()
-    pc.draw()
+    if not collision_detected:
+        pc.draw()
     for g in ghosts:
         g.draw()
         g.update2(pc.position)
@@ -250,6 +299,12 @@ def display():
 done = False
 Init()
 #finding(matrix, (xarray[0]-20,zarray[0]-20), (xarray[9]-20,zarray[9]-20))
+
+# Variables del buffer de teclado
+act_teclado = -1
+delta = 0
+lon_ventana = 20 # frames de tolerancia (pixeles dados) para mantener la tecla vigente
+
 while not done:
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
@@ -261,26 +316,54 @@ while not done:
         pass # Deshabilitado para mantener la vista 2D estricta
     if keys[pygame.K_LEFT]:
         pass # Deshabilitado para mantener la vista 2D estricta
-    #Se verifica la direccion para el pacman    
+    
+    # Se verifica la direccion para el pacman actualizando el buffer
     if keys[pygame.K_w]:
-        #direccion 0
-        pc.update(0)
+        act_teclado = 0  # up
+        delta = 0
     elif keys[pygame.K_d]:
-        #direccion 1
-        pc.update(1)
+        act_teclado = 1  # right
+        delta = 0
     elif keys[pygame.K_s]:
-        #direccion 2
-        pc.update(2)
+        act_teclado = 2  # down
+        delta = 0
     elif keys[pygame.K_a]:
-        #direccion 1
-        pc.update(3)
-    else:
-        pc.update(-1)
+        act_teclado = 3  # left
+        delta = 0
+    
+    # Control de vida del buffer (la ventana o delta)
+    if act_teclado != -1:
+        delta += 1
+        if delta > lon_ventana:
+            act_teclado = -1 # expira el buffer si no se usa a tiempo
+            
+    # Mandamos al update el estado actual del buffer de teclado
+    pc.update(act_teclado)
+
+    # Deteccion de colisiones
+    for g in ghosts:
+        # Distancia Euclidiana en el plano XZ
+        dist = math.sqrt((pc.position[0] - g.position[0])**2 + (pc.position[2] - g.position[2])**2)
+        if dist < 12: # Umbral de colision
+            collision_detected = True
+            pygame.mixer.stop() # Detener sonidos en colisión
+            display() # Dibujamos una ultima vez para que desaparezca pacman
+            pygame.display.flip()
+            print("\n" + "="*40)
+            print("          ¡ G A M E   O V E R !")
+            print("        Pac-Man ha sido atrapado")
+            print("="*40 + "\n")
+            pygame.display.set_caption("GAME OVER - Colisión detectada")
+            pygame.time.wait(3000) # Esperamos 3 segundos para que el usuario lo vea
+            done = True
+            return_to_menu = True
+            break
 
     display()
     pygame.display.flip()
     pygame.time.wait(10)
 
 pygame.quit()
-    
 
+if return_to_menu:
+    os.execl(sys.executable, sys.executable, *sys.argv)

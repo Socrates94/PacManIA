@@ -206,52 +206,31 @@ class Ghost:
         self.positionMC[1] = self.YPxToMC[self.position[2] - 20]
         celId = self.MC[self.positionMC[1]][self.positionMC[0]]
         #a partir de la celda actual se generan sus opciones posibles
+        mapping = {10:0, 11:1, 12:2, 13:3, 21:4, 22:5, 23:6, 24:7, 25:8, 26:9, 27:10}
+        
         if celId == 0:
             self.option = [self.direction]
-        elif celId == 10: #options = [1, 2]
-            self.option = self.options[0]
-        elif celId == 11: #options = [2, 3]
-            self.option = self.options[1]
-        elif celId == 12: #options = [0, 1]
-            self.option = self.options[2]
-        elif celId == 13: #options = [0, 3]
-            self.option = self.options[3]
-        elif celId == 21: #options = [1, 2, 3]
-            self.option = self.options[4]
-        elif celId == 22: #options = [0, 2, 3]
-            self.option = self.options[5]
-        elif celId == 23: #options = [0, 1, 3]
-            self.option = self.options[6]
-        elif celId == 24: #options = [0, 1, 2]
-            self.option = self.options[7]
-        elif celId == 25: #options = [0, 1, 2, 3]
-            self.option = self.options[8]
-        elif celId == 26: #options = [1]
-            self.option = self.options[9]
-        elif celId == 27: #options = [3]
-            self.option = self.options[10]
+        elif celId in mapping:
+            self.option = list(self.options[mapping[celId]])
         
         #se calcula la direccion inversa a la actual
-        if self.direction == 0:
-            self.dir_inv = 2
-        elif self.direction == 1:
-            self.dir_inv = 3
-        elif self.direction == 2:
-            self.dir_inv = 0
-        else:
-            self.dir_inv = 1
+        self.dir_inv = (self.direction + 2) % 4
 
         #se elimina la direccion invertida a la actual, evitando que el
-        #fantasma regrese por el camion por donde llego (rebote)
+        #fantasma regrese por el camino por donde llego (rebote)
         if (celId != 0) and (celId != 26) and (celId != 27):
-            self.option.remove(self.dir_inv)
+            if self.dir_inv in self.option:
+                self.option.remove(self.dir_inv)
         
         #se elige aleatoriamente una opcion entre las disponibles
         size = len(self.option)
-        dir_rand = random.randint(0, size - 1)
-        
-        #se actualiza el vector de direccion y posicion del fantasma
-        self.direction = self.option[dir_rand]
+        if size > 0:
+            dir_rand = random.randint(0, size - 1)
+            #se actualiza el vector de direccion y posicion del fantasma
+            self.direction = self.option[dir_rand]
+        else:
+            # Si por alguna razón no hay opciones excepto la inversa, mantenemos la actual
+            pass
         
         if self.direction == 0:
             self.position[2] -= 1
@@ -262,8 +241,7 @@ class Ghost:
         elif self.direction == 3:
             self.position[0] -= 1
             
-        if (celId != 0) and (celId != 26) and (celId != 27):
-            self.option.append(self.dir_inv)    
+
     
     def update2(self,pacmanXY):
         # Control de límites para evitar IndexError
