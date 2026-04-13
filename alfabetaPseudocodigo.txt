@@ -1,0 +1,56 @@
+Algoritmo Poda_Alfa_Beta_Avanzada(estado, profundidad, alfa, beta, es_maximizador, es_quiescente):
+    distancia = Distancia_Manhattan(estado.fantasma, estado.pacman)
+    
+    // Mejoramiento 1: Continuación Heurística (Quiescence Search)
+    // Expandimos el árbol temporalmente para evitar efectos de horizonte en colisiones inminentes
+    Si profundidad == 0 Y (No es_quiescente) Y distancia <= 2:
+        Retornar Poda_Alfa_Beta_Avanzada(estado, 2, alfa, beta, es_maximizador, Verdadero)
+    
+    Si profundidad == 0 O estado_es_terminal(estado):
+        Retornar Evaluar_Heuristica_Con_Tabu(estado)
+    
+    Si es_maximizador:
+        max_eval = -Infinito
+        opciones = Obtener_Movimientos_Validos(estado.fantasma)
+        
+        Si esta_vacia(opciones): Retornar Evaluar_Heuristica_Con_Tabu(estado)
+            
+        // Mejoramiento 2: Búsqueda Ambiciosa (Move Ordering)
+        // Se ordena la lista evaluando la heurística base simulando el siguiente nivel
+        opciones = Ordenar_Max_a_Min(opciones, Evaluar_Heuristica_Base)
+        
+        Para cada movimiento en opciones:
+            nuevo_estado = Simular_Movimiento(estado, movimiento)
+            eval = Poda_Alfa_Beta_Avanzada(nuevo_estado, profundidad - 1, alfa, beta, Falso, es_quiescente)
+            max_eval = Max(max_eval, eval)
+            alfa = Max(alfa, eval)
+            Si beta <= alfa:
+                Romper Ciclo // Poda Beta
+        Retornar max_eval
+
+    Sino: // Es minimizador (Pacman)
+        min_eval = Infinito
+        opciones = Obtener_Movimientos_Validos(estado.pacman)
+        
+        Si esta_vacia(opciones): Retornar Evaluar_Heuristica_Con_Tabu(estado)
+            
+        // Move ordering inverso para minimizar pronto el árbol e invocar poda Alfa
+        opciones = Ordenar_Min_a_Max(opciones, Evaluar_Heuristica_Base)
+        
+        Para cada movimiento en opciones:
+            nuevo_estado = Simular_Movimiento(estado, movimiento)
+            eval = Poda_Alfa_Beta_Avanzada(nuevo_estado, profundidad - 1, alfa, beta, Verdadero, es_quiescente)
+            min_eval = Min(min_eval, eval)
+            beta = Min(beta, eval)
+            Si beta <= alfa:
+                Romper Ciclo // Poda Alfa
+        Retornar min_eval
+
+Funcion Evaluar_Heuristica_Con_Tabu(estado):
+    puntaje = -1 * Distancia_Manhattan(estado.fantasma, estado.pacman)
+    
+    // Tabú con horizonte limitado: Penalización a ramas previamente transitadas recientemente
+    Si estado.fantasma.posicion se encuentra en Lista_Tabu:
+        puntaje = puntaje - 100
+        
+    Retornar puntaje

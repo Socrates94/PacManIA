@@ -52,6 +52,7 @@ class Ghost:
         ]
         self.option = []
         self.dir_inv = 0
+        self.tabu_list = []
         
     def loadTextures(self, texturas, id):
         self.texturas = texturas
@@ -86,8 +87,8 @@ class Ghost:
         
     def path_ia(self,pacmanXY):
         # bloque para implementar la IA en los fantasmas
-        if self.tipo == 2:
-            self.poda_alfa_beta_logic(pacmanXY)
+        if self.tipo == 2 or self.tipo == 3:
+            self.poda_alfa_beta_logic(pacmanXY, is_manada=(self.tipo == 3))
         else:
             self.interseccion_random()
 
@@ -116,10 +117,23 @@ class Ghost:
     def evaluate(self, g_row, g_col, p_row, p_col):
         # Queremos que el fantasma minimice la distancia, 
         # así que como Maximizer, la utilidad es la distancia negativa.
-        return -(abs(g_row - p_row) + abs(g_col - p_col))
+        base_score = -(abs(g_row - p_row) + abs(g_col - p_col))
+        
+        # Tabú con horizonte limitado: Penalizar fuertemente posiciones recientemente visitadas
+        if (g_row, g_col) in self.tabu_list:
+            base_score -= 100
+            
+        return base_score
 
-    def minimax(self, g_row, g_col, p_row, p_col, depth, alpha, beta, maximizingPlayer):
-        if depth == 0 or (g_row == p_row and g_col == p_col):
+    def minimax(self, g_row, g_col, p_row, p_col, depth, alpha, beta, maximizingPlayer, is_quiescence=False):
+        dist = abs(g_row - p_row) + abs(g_col - p_col)
+        
+        # 1ra Estrategia: Continuación Heurística (Quiescence Search)
+        # Extendemos la búsqueda si estamos en límite de profundidad pero a distancia crítica
+        if depth == 0 and not is_quiescence and dist <= 2:
+            return self.minimax(g_row, g_col, p_row, p_col, 2, alpha, beta, maximizingPlayer, True)
+            
+        if depth == 0 or dist == 0:
             return self.evaluate(g_row, g_col, p_row, p_col)
 
         if maximizingPlayer:
@@ -127,10 +141,15 @@ class Ghost:
             options = self.get_options_at(g_row, g_col)
             if not options:
                 return self.evaluate(g_row, g_col, p_row, p_col)
+                
+            # 2da Estrategia: Búsqueda Ambiciosa (Move Ordering)
+            # Ordenamos para explorar primero las rutas aparentemente mejores y realizar cortes más rápidos
+            options.sort(key=lambda m: self.evaluate(*self.get_next_mc_pos(g_row, g_col, m), p_row, p_col), reverse=True)
+            
             for move in options:
                 nr, nc = self.get_next_mc_pos(g_row, g_col, move)
                 if 0 <= nr < 10 and 0 <= nc < 10:
-                    eval = self.minimax(nr, nc, p_row, p_col, depth - 1, alpha, beta, False)
+                    eval = self.minimax(nr, nc, p_row, p_col, depth - 1, alpha, beta, False, is_quiescence)
                     max_eval = max(max_eval, eval)
                     alpha = max(alpha, eval)
                     if beta <= alpha:
@@ -142,17 +161,21 @@ class Ghost:
             # Si Pacman no tiene opciones (ej. en un pasillo), simulamos que sigue recto o se queda
             if not options:
                 return self.evaluate(g_row, g_col, p_row, p_col)
+                
+            # Búsqueda Ambiciosa (Move Ordering) minimizador
+            options.sort(key=lambda m: self.evaluate(g_row, g_col, *self.get_next_mc_pos(p_row, p_col, m)), reverse=False)
+            
             for move in options:
                 nr, nc = self.get_next_mc_pos(p_row, p_col, move)
                 if 0 <= nr < 10 and 0 <= nc < 10:
-                    eval = self.minimax(g_row, g_col, nr, nc, depth - 1, alpha, beta, True)
+                    eval = self.minimax(g_row, g_col, nr, nc, depth - 1, alpha, beta, True, is_quiescence)
                     min_eval = min(min_eval, eval)
                     beta = min(beta, eval)
                     if beta <= alpha:
                         break
             return min_eval
 
-    def poda_alfa_beta_logic(self, pacmanXY):
+    def poda_alfa_beta_logic(self, pacmanXY, is_manada=False):
         # Convertir posiciones de píxeles a índices de la matriz MC
         self.positionMC[0] = self.XPxToMC[self.position[0] - 20]
         self.positionMC[1] = self.YPxToMC[self.position[2] - 20]
@@ -161,6 +184,15 @@ class Ghost:
         # buscamos el índice MC más cercano.
         p_x_px = pacmanXY[0] - 20
         p_z_px = pacmanXY[2] - 20
+        
+        # Flanqueo asimétrico para la manada
+        if is_manada:
+            if hasattr(self, 'Id') and self.Id == 4: # Inky
+                p_x_px += 80 # Offset asimétrico en X y Z
+                p_z_px += 40
+            elif hasattr(self, 'Id') and self.Id == 5: # Clyde
+                p_x_px -= 40 # Mapeo inverso flanqueando por atrás
+                p_z_px -= 80
         
         # Encontrar los índices más cercanos en las listas de mapeo
         # Reutilizamos las claves de XPxToMC que no son -1
@@ -194,6 +226,11 @@ class Ghost:
                     best_move = move
         
         self.direction = best_move
+        
+        # Almacenar en la lista tabú con un horizonte limitado a 3 posiciones
+        self.tabu_list.append((self.positionMC[1], self.positionMC[0]))
+        if len(self.tabu_list) > 3:
+            self.tabu_list.pop(0)
         
         if self.direction == 0: self.position[2] -= 1
         elif self.direction == 1: self.position[0] += 1
@@ -257,7 +294,7 @@ class Ghost:
         #si el fantasma se encuentra en una interseccion (valida o "falsa interseccion")
         if ((self.YPxToMC[self.position[2] - 20] != -1) and 
             (self.XPxToMC[self.position[0] - 20] != -1)):
-            if self.tipo == 1 or self.tipo == 2: #agente inteligente, se manda la posición del objetivo
+            if self.tipo in [1, 2, 3]: #agente inteligente o manada, se manda la posición del objetivo
                 self.path_ia(pacmanXY)
             else:
                 self.interseccion_random()
