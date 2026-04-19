@@ -195,6 +195,23 @@ class Ghost:
             else:
                 pacman_options = len(self.get_options_at(p_row, p_col))
                 base_score -= pacman_options * 2
+
+            # Agregamos la penalización por Producto Punto (Herd Hunting estricto)
+            # Para forzar que reaccionen velozmente si coinciden en la misma ruta
+            if partner_row is not None and partner_col is not None:
+                v1_row = g_row - p_row
+                v1_col = g_col - p_col
+                
+                v2_row = partner_row - p_row
+                v2_col = partner_col - p_col
+                
+                dot_product = (v1_row * v2_row) + (v1_col * v2_col)
+                
+                # Si > 0, vienen del mismo lado. Si es muy alto, están literalmente empalmados.
+                # Castigo severo multiplicando el valor para forzar abandono de esa ruta
+                if dot_product > 0:
+                    base_score -= (dot_product * 3.0)
+
         else:  # Pinky: bonificar si esta alineado en el mismo eje que Pac-Man
             if g_row == p_row or g_col == p_col:
                 base_score += 3
