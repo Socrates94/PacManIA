@@ -52,16 +52,17 @@ radius = 300
 
 #Arreglo para el manejo de texturas
 textures = []
+
 #Nombre de los archivos a usar
 BASE_PATH = os.path.abspath(os.path.dirname(__file__))
 file_1 = os.path.join(BASE_PATH, 'mapa.bmp')
 img_pacman = os.path.join(BASE_PATH, 'pacman.bmp')
-img_ghost1 = os.path.join(BASE_PATH, 'fantasma1.bmp')
-img_ghost2 = os.path.join(BASE_PATH, 'fantasma2.bmp')
-img_ghost3 = os.path.join(BASE_PATH, 'fantasma3.bmp')
-img_ghost4 = os.path.join(BASE_PATH, 'fantasma4.bmp')
+img_ghost1 = os.path.join(BASE_PATH, 'fantasma1.bmp') #blinky
+img_ghost2 = os.path.join(BASE_PATH, 'fantasma2.bmp') #pinky
+img_ghost3 = os.path.join(BASE_PATH, 'fantasma3.bmp') #inky
+img_ghost4 = os.path.join(BASE_PATH, 'fantasma4.bmp') #clyde
 
-
+# Lee los tableros de navegacion
 file_csv = os.path.join(BASE_PATH, 'mapa.csv')
 matrix = np.array(pd.io.parsers.read_csv(file_csv, header=None)).astype("int")
 zmatrix = len(matrix)
@@ -74,16 +75,16 @@ xarray = [-180 + 200, -150 + 200, -108 + 200, -65 + 200, -22 + 200, 21 + 200, 64
 
 #Matriz de Control para mapeo entre pixeles <-> coord donde se localizan esquinas
 MC = [
-    [10,0,21,0,11,10,0,21,0,11],
-    [24,0,25,21,23,23,21,25,0,22],
-    [12,0,22,12,11,10,13,24,0,13],
-    [0,0,0,10,23,23,11,0,0,0],
-    [26,0,25,22,0,0,24,25,0,27],
-    [0,0,0,24,0,0,22,0,0,0],
-    [10,0,25,23,11,10,23,25,0,11],
-    [12,11,24,21,23,23,21,22,10,13],
-    [10,23,13,12,11,10,13,12,23,11],
-    [12,0,0,0,23,23,0,0,0,13]
+    [10,  0, 21,  0, 11, 10,  0, 21,  0, 11],
+    [24,  0, 25, 21, 23, 23, 21, 25,  0, 22],
+    [12,  0, 22, 12, 11, 10, 13, 24,  0, 13],
+    [ 0,  0,  0, 10, 23, 23, 11,  0,  0,  0],
+    [26,  0, 25, 22,  0,  0, 24, 25,  0, 27],
+    [ 0,  0,  0, 24,  0,  0, 22,  0,  0,  0],
+    [10,  0, 25, 23, 11, 10, 23, 25,  0, 11],
+    [12, 11, 24, 21, 23, 23, 21, 22, 10, 13],
+    [10, 23, 13, 12, 11, 10, 13, 12, 23, 11],
+    [12,  0,  0,  0, 23, 23,  0,  0,  0, 13]
 ]
 
 xMC = [0,30,71,114,156,199,242,286,328,358]
@@ -102,6 +103,7 @@ XPxToMC[328] = 8
 XPxToMC[358] = 9
  
 yMC = [0,51,90,130,168,208,244,282,320,360]
+
 #YPxToMC = np.zeros((361,), dtype=int)
 YPxToMC = np.full(361, -1, dtype=int)
 YPxToMC[0] = 0
@@ -125,7 +127,7 @@ pc = Pacman(matrix, MC, XPxToMC, YPxToMC)
 blinky = Ghost(matrix, MC, XPxToMC, YPxToMC, 378, 20, 0, 0)
 pinky = Ghost(matrix, MC, XPxToMC, YPxToMC, 378, 380, 2, 2)
 inky = Ghost(matrix, MC, XPxToMC, YPxToMC, 20, 380, 3, 3)
-clyde = Ghost(matrix, MC, XPxToMC, YPxToMC, 219, 150, 1, 3)
+clyde = Ghost(matrix, MC, XPxToMC, YPxToMC, 378, 20, 1, 3)
 
 def configurar_fantasmas(opcion):
     ghosts_activos = []
@@ -142,12 +144,12 @@ def configurar_fantasmas(opcion):
 def mostrar_menu():
     print("\n" + "="*75)
     print("\t\t MENU DEL JUEGO")
-    print("     Juego de Pac-Man con el algoritmo Poda alfa beta")
+    print("     Juego de Pac-Man con el algoritmo Minimax poda alfa beta")
     print("="*75)
     print("1. Fantasma (Blinky - rojo) movimientos aleatorios")
-    print("2. Fantasma (Pinky - rosa) con poda alfa beta con las dos heurísticas")
+    print("2. Fantasma (Pinky - rosa) solitario con dos heuristicas")
     print("3. Fantasmas (Inky/Clyde - cian/naranja) cazar en manada")
-    print("4. Todos los fantasmitas a la vez (Blinky, Pinky, Inky, Clyde)")
+    print("4. Todos los fantasmitas atacando a la vez (Blinky, Pinky, Inky, Clyde)")
     print("5. Salir")
     print("="*75 + "\n")
     
@@ -215,7 +217,7 @@ def Texturas(filepath):
 def Init():
     screen = pygame.display.set_mode(
         (screen_width, screen_height), DOUBLEBUF | OPENGL)
-    pygame.display.set_caption("OpenGL: cubos")
+    pygame.display.set_caption("Juego de Pac-Man Poda Alfa Beta")
 
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
@@ -294,16 +296,30 @@ def display():
         pc.draw()
     for g in ghosts:
         g.draw()
-        g.update2(pc.position)
+        g.update2(pc.position, ghosts)
     
 done = False
 Init()
 #finding(matrix, (xarray[0]-20,zarray[0]-20), (xarray[9]-20,zarray[9]-20))
 
+# Mapeo de nombres para el mensaje de victoria
+nombres_modos = {
+    1: "Blinky (Rojo) Aleatorio",
+    2: "Pinky (Rosa) Poda Alfa-Beta",
+    3: "Inky y Clyde (Manada)",
+    4: "Todos los fantasmas"
+}
+nombre_modo_actual = nombres_modos.get(opcion_menu, "Desconocido")
+
+# Variables del temporizador de supervivencia
+tiempo_inicio = pygame.time.get_ticks()
+tiempo_limite = 30000  # 30 segundos en milisegundos
+
 # Variables del buffer de teclado
 act_teclado = -1
 delta = 0
-lon_ventana = 20 # frames de tolerancia (pixeles dados) para mantener la tecla vigente
+lon_ventana = 30 # frames de tolerancia (pixeles dados) para mantener la tecla vigente
+# con 30 quedo muy bien
 
 while not done:
     for event in pygame.event.get():
@@ -340,10 +356,11 @@ while not done:
     # Mandamos al update el estado actual del buffer de teclado
     pc.update(act_teclado)
 
-    # Deteccion de colisiones
+    # Deteccion de colisiones hitboxes
     for g in ghosts:
-        # Distancia Euclidiana en el plano XZ
+        # Distancia Euclidiana en el plano XZ 
         dist = math.sqrt((pc.position[0] - g.position[0])**2 + (pc.position[2] - g.position[2])**2)
+        
         if dist < 12: # Umbral de colision
             collision_detected = True
             pygame.mixer.stop() # Detener sonidos en colisión
@@ -354,10 +371,32 @@ while not done:
             print("        Pac-Man ha sido atrapado")
             print("="*40 + "\n")
             pygame.display.set_caption("GAME OVER - Colisión detectada")
-            pygame.time.wait(3000) # Esperamos 3 segundos para que el usuario lo vea
+            pygame.time.wait(2000) # Esperamos 3 segundos para que el usuario lo vea
             done = True
             return_to_menu = True
             break
+
+    # Verificacion del temporizador de victoria (1 minuto)
+    tiempo_actual = pygame.time.get_ticks()
+    tiempo_transcurrido = tiempo_actual - tiempo_inicio
+    
+    # Calcular y mostrar segundos restantes en la barra de titulo
+    segundos_restantes = max(0, (tiempo_limite - tiempo_transcurrido) // 1000)
+    pygame.display.set_caption(f"Pac-Man IA - Tiempo Restante: {segundos_restantes}s")
+
+    if tiempo_transcurrido >= tiempo_limite and not collision_detected:
+        pygame.mixer.stop()
+        display() # Dibujamos una ultima vez
+        pygame.display.flip()
+        print("\n" + "="*50)
+        print("          ¡ V I C T O R Y !")
+        print(f" Sobreviviste 30 segundos contra: {nombre_modo_actual}")
+        print("="*50 + "\n")
+        pygame.display.set_caption("VICTORIA - ¡Sobreviviste!")
+        pygame.time.wait(2000) # Esperamos 4 segundos para que el usuario lo vea
+        done = True
+        return_to_menu = True
+        break
 
     display()
     pygame.display.flip()

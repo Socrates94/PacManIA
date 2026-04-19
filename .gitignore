@@ -1,0 +1,20 @@
+# Caché y compilados de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Entornos virtuales (por si los usas a futuro)
+venv/
+env/
+.venv/
+.env/
+
+# Archivos de configuración de editores/IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Archivos propios del Sistema Operativo
+.DS_Store
+Thumbs.db
