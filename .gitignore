@@ -18,3 +18,8 @@ env/
 # Archivos propios del Sistema Operativo
 .DS_Store
 Thumbs.db
+
+# Notas y Archivos de Contexto
+GEMINI.md
+REPORTE_EXAMEN.md
+Reporte_Pregunta4.md
