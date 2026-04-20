@@ -369,11 +369,17 @@ while not done:
             sonido_death.play()
             display() # Dibujamos una ultima vez para que desaparezca pacman
             pygame.display.flip()
+            
+            # Calcular tiempo sobrevivido
+            tiempo_actual = pygame.time.get_ticks()
+            segundos_sobrevividos = (tiempo_actual - tiempo_inicio) / 1000.0
+            
             print("\n" + "="*40)
             print("          ¡ G A M E   O V E R !")
             print("        Pac-Man ha sido atrapado")
+            print(f"      Tiempo sobreviviste: {segundos_sobrevividos:.2f} s")
             print("="*40 + "\n")
-            pygame.display.set_caption("GAME OVER - Colisión detectada")
+            pygame.display.set_caption(f"GAME OVER - Sobreviviste {segundos_sobrevividos:.1f}s")
             pygame.time.wait(2000) # Esperamos 3 segundos para que el usuario lo vea
             done = True
             return_to_menu = True
