@@ -1,12 +1,6 @@
+Comandos:
 
 1. source ~/.bashrc
 2. conda activate pacman
 3. python3 main.py
 
-
- Para automatizarlo (Opcional)
-  Si quieres que el proyecto se ejecute con un solo comando corto (por ejemplo, escribiendo solo pacman), puedes crear un alias temporal en tu
-  terminal actual:
-  
-1. alias pacman='conda activate pacman && python3 main.py'
-2. pacman

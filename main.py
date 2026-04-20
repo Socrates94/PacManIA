@@ -117,13 +117,14 @@ YPxToMC[282] = 7
 YPxToMC[320] = 8
 YPxToMC[360] = 9
 
-#pathfinding variables
-path = []
-grid = []
-
 #pacman object
 pc = Pacman(matrix, MC, XPxToMC, YPxToMC)
 # Inicialización de objetos de fantasmas (individuales para pruebas dinámicas)
+#se almacena que tipo de fantasma sera:
+#0: Nivel básico (Aleatorio).
+#1: Sin uso activo en la versión actual (Pathfinding obsoleto).
+#2: Nivel táctico (Poda Alfa-Beta con heurísticas, Pinky).
+#3: Nivel avanzado (Caza en manada, Inky y Clyde).
 blinky = Ghost(matrix, MC, XPxToMC, YPxToMC, 378, 20, 0, 0)
 pinky = Ghost(matrix, MC, XPxToMC, YPxToMC, 378, 380, 2, 2)
 inky = Ghost(matrix, MC, XPxToMC, YPxToMC, 20, 380, 3, 3)
@@ -215,6 +216,7 @@ def Texturas(filepath):
     glGenerateMipmap(GL_TEXTURE_2D) 
     
 def Init():
+    # Configuración de la ventana
     screen = pygame.display.set_mode(
         (screen_width, screen_height), DOUBLEBUF | OPENGL)
     pygame.display.set_caption("Juego de Pac-Man Poda Alfa Beta")
@@ -235,8 +237,9 @@ def Init():
 
     # Inicializar el mezclador de audio
     pygame.mixer.init()
-    global sonido_chomp
+    global sonido_chomp, sonido_death
     sonido_chomp = pygame.mixer.Sound('pacman_chomp.wav')
+    sonido_death = pygame.mixer.Sound('pacman_death.wav')
     sonido_chomp.play(-1) # Reproducir en bucle infinito
 
     #textures[0]: plano
@@ -300,7 +303,6 @@ def display():
     
 done = False
 Init()
-#finding(matrix, (xarray[0]-20,zarray[0]-20), (xarray[9]-20,zarray[9]-20))
 
 # Mapeo de nombres para el mensaje de victoria
 nombres_modos = {
@@ -364,6 +366,7 @@ while not done:
         if dist < 12: # Umbral de colision
             collision_detected = True
             pygame.mixer.stop() # Detener sonidos en colisión
+            sonido_death.play()
             display() # Dibujamos una ultima vez para que desaparezca pacman
             pygame.display.flip()
             print("\n" + "="*40)

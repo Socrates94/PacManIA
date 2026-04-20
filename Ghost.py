@@ -6,36 +6,43 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
-import math
-import os
 import numpy as np
-import pandas as pd
 import random
 
 class Ghost:
     
     def __init__(self,mapa, mc, x_mc, y_mc, xini, yini, dir, tipo):
+        
+        #se resplanda el mapa en terminos de pixeles
+        self.mapa = mapa
+        
         #Matriz de control que almacena los IDs de las intersecciones
         self.MC = mc
+        
         #Vectores que almacenan las coordenadas 
         self.XPxToMC = x_mc
         self.YPxToMC = y_mc
-        #se resplanda el mapa en terminos de pixeles
-        self.mapa = mapa
+        
+ 
         #se inicializa la posicion del fantasma en terminos de pixeles
         self.position = []
         self.position.append(xini)
         self.position.append(1) #YPos
         self.position.append(yini)
+        
         #se define el arreglo para la posicion en la matriz de control
         self.positionMC = []
         self.positionMC.append(self.XPxToMC[self.position[0] - 20]) #coord en x
         self.positionMC.append(self.YPxToMC[self.position[2] - 20]) #coord en y
+        
         #se inicializa una direccion valida
         self.direction = dir
+        
         #se almacena que tipo de fantasma sera:
-        #0: fantasma aleatorio
-        #1: fantasma con pathfinding
+        #0: Nivel básico (Aleatorio).
+        #1: Sin uso activo en la versión actual (Pathfinding obsoleto).
+        #2: Nivel táctico (Poda Alfa-Beta con heurísticas, Pinky).
+        #3: Nivel avanzado (Caza en manada, Inky y Clyde).
         self.tipo = tipo
         
         #arreglo para almacenar las opciones del fantasma
@@ -84,9 +91,6 @@ class Ghost:
             self.position[2] += 1
         else: #left
             self.position[0] -= 1
-        #se actualiza la variable de posicion sobre el path
-        if self.tipo == 1: #fantasma inteligente
-            self.path_n += 1
         
     def path_ia(self,pacmanXY, all_ghosts=None):
         # bloque para implementar la IA en los fantasmas

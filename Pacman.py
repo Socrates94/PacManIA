@@ -6,11 +6,6 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
-import math
-import os
-import numpy as np
-import pandas as pd
-
 class Pacman:
     
     def __init__(self,mapa, mc, x_mc, y_mc):
