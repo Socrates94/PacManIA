@@ -57,10 +57,10 @@ textures = []
 BASE_PATH = os.path.abspath(os.path.dirname(__file__))
 file_1 = os.path.join(BASE_PATH, 'mapa.bmp')
 img_pacman = os.path.join(BASE_PATH, 'pacman.bmp')
-img_ghost1 = os.path.join(BASE_PATH, 'fantasma1.bmp') #blinky
-img_ghost2 = os.path.join(BASE_PATH, 'fantasma2.bmp') #pinky
-img_ghost3 = os.path.join(BASE_PATH, 'fantasma3.bmp') #inky
-img_ghost4 = os.path.join(BASE_PATH, 'fantasma4.bmp') #clyde
+img_ghost1 = os.path.join(BASE_PATH, 'fantasma1.bmp') #blinky rojo
+img_ghost2 = os.path.join(BASE_PATH, 'fantasma2.bmp') #pinky rosa
+img_ghost3 = os.path.join(BASE_PATH, 'fantasma3.bmp') #inky cian
+img_ghost4 = os.path.join(BASE_PATH, 'fantasma4.bmp') #clyde naranja
 
 # Lee los tableros de navegacion
 file_csv = os.path.join(BASE_PATH, 'mapa.csv')

@@ -182,7 +182,7 @@ class Ghost:
         base_score = -(abs(g_row - p_row) + abs(g_col - p_col))
 
         # Componente heuristico 2: diferenciado por estrategia de caza
-        if self.tipo == 3:  # manada: encasillamiento continuo por gradientes
+        if self.tipo == 3:  # manada: encasillamiento continuo por gradientes asimetricos
             if hasattr(self, 'Id'):
                 row_dist = abs(g_row - p_row)
                 col_dist = abs(g_col - p_col)
@@ -224,7 +224,8 @@ class Ghost:
 
     # Algoritmo minimax para la busqueda de la mejor jugada (construccion del arbol de estados)
     def minimax(self, g_row, g_col, p_row, p_col, depth, alpha, beta, maximizingPlayer, is_quiescence=False, partner_row=None, partner_col=None):
-        dist = abs(g_row - p_row) + abs(g_col - p_col)
+        
+        dist = abs(g_row - p_row) + abs(g_col - p_col) #distancia euclidiana entre el fantasma y pacman
 
         # Estrategia 1: Continuacion Heuristica Espera en reposo (Quiescence Search)
         # Si al llegar al limite la situacion es critica, se extiende la busqueda
